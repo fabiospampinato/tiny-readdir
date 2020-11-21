@@ -2,7 +2,8 @@
 /* TYPES */
 
 type Options = {
-  depth?: number
+  depth?: number,
+  ignore?: ( targetPath: string ) => boolean
 };
 
 type Result = {

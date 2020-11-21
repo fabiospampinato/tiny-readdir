@@ -14,7 +14,8 @@ npm install --save tiny-readdir
 import readdir from 'tiny-readdir';
 
 const result = await readdir ( '/foo/bar', {
-  depth: 20 // Maximum depth to look at
+  depth: 20, // Maximum depth to look at
+  ignore: targetPath => /node_modules/.test ( targetPath ) // Function that if returns true will ignore this particular file or a directory and its descendants
 });
 
 console.log ( result.directories ); // => Array of absolute paths pointing to directories

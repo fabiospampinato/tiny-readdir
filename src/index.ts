@@ -10,6 +10,7 @@ import {Options, Result} from './types';
 const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   const maxDepth = options?.depth ?? Infinity,
+        isIgnored = options?.ignore ?? (() => false),
         directories: string[] = [],
         files: string[] = [],
         result: Result = { directories, files };
@@ -25,6 +26,8 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
     await Promise.all ( dirents.map ( ( dirent ): Promise<Result> | undefined => {
 
       const subPath = path.resolve ( rootPath, dirent.name );
+
+      if ( isIgnored ( subPath ) ) return;
 
       if ( dirent.isFile () ) {
 
