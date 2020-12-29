@@ -3,7 +3,8 @@
 
 type Options = {
   depth?: number,
-  ignore?: ( targetPath: string ) => boolean
+  ignore?: ( targetPath: string ) => boolean,
+  signal?: { aborted: boolean }
 };
 
 type Result = {
