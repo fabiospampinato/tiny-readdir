@@ -17,19 +17,9 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
         resultEmpty: Result = { directories: [], files: [] },
         result: Result = { directories, files };
 
-  const populateResult = async ( rootPath: string, depth: number = 1 ): Promise<Result> => {
+  const handleDirents = ( dirents: fs.Dirent[], depth: number ): Promise<(Result | undefined)[]> => {
 
-    if ( signal.aborted ) return resultEmpty;
-
-    if ( depth > maxDepth ) return result;
-
-    const dirents = await fs.promises.readdir ( rootPath, { withFileTypes: true } ).catch ( () => {} ) || [];
-
-    if ( signal.aborted ) return resultEmpty;
-
-    if ( !dirents.length ) return result;
-
-    await Promise.all ( dirents.map ( ( dirent ): Promise<Result> | undefined => {
+    return Promise.all ( dirents.map ( ( dirent ): Promise<Result> | undefined => {
 
       if ( signal.aborted ) return;
 
@@ -52,6 +42,22 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
       }
 
     }));
+
+  };
+
+  const populateResult = async ( rootPath: string, depth: number = 1 ): Promise<Result> => {
+
+    if ( signal.aborted ) return resultEmpty;
+
+    if ( depth > maxDepth ) return result;
+
+    const dirents = await fs.promises.readdir ( rootPath, { withFileTypes: true } ).catch ( () => [] );
+
+    if ( signal.aborted ) return resultEmpty;
+
+    if ( !dirents.length ) return result;
+
+    await handleDirents ( dirents, depth );
 
     if ( signal.aborted ) return resultEmpty;
 
