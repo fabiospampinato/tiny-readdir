@@ -3,7 +3,12 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import Limiter from 'promise-concurrency-limiter';
 import {Options, Result} from './types';
+
+/* HELPERS */
+
+const limiter = new Limiter ({ concurrency: 500 });
 
 /* TINY READDIR */
 
@@ -17,7 +22,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
         resultEmpty: Result = { directories: [], files: [] },
         result: Result = { directories, files };
 
-  const handleDirents = ( dirents: fs.Dirent[], depth: number ): Promise<(Result | undefined)[]> => {
+  const handleDirents = ( rootPath: string, dirents: fs.Dirent[], depth: number ): Promise<(Result | undefined)[]> => {
 
     return Promise.all ( dirents.map ( ( dirent ): Promise<Result> | undefined => {
 
@@ -37,7 +42,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
         if ( depth >= maxDepth ) return;
 
-        return populateResult ( subPath, depth + 1 );
+        return limiter.add ( () => populateResult ( subPath, depth + 1 ) );
 
       }
 
@@ -57,7 +62,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( !dirents.length ) return result;
 
-    await handleDirents ( dirents, depth );
+    await handleDirents ( rootPath, dirents, depth );
 
     if ( signal.aborted ) return resultEmpty;
 
