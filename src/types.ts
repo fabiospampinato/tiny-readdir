@@ -1,17 +1,23 @@
 
+/* HELPERS */
+
+type Promisable<T> = T | Promise<T>;
+
 /* TYPES */
 
 type Options = {
   depth?: number,
+  followSymlinks?: boolean,
   ignore?: ( targetPath: string ) => boolean,
   signal?: { aborted: boolean }
 };
 
 type Result = {
   directories: string[],
-  files: string[]
+  files: string[],
+  symlinks: string[]
 };
 
 /* EXPORT */
 
-export {Options, Result};
+export {Promisable, Options, Result};
