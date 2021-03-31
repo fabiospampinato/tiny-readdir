@@ -89,7 +89,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( signal.aborted ) return;
 
-    const subPath = path.resolve ( rootPath, dirent.name );
+    const subPath = `${rootPath}${path.sep}${dirent.name}`;
 
     if ( isIgnored ( subPath ) ) return;
 
@@ -136,6 +136,8 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   };
 
   const getResult = async ( rootPath: string, depth: number = 1 ): Promise<Result> => {
+
+    rootPath = path.normalize ( rootPath );
 
     await populateResult ( rootPath, depth );
 
