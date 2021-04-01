@@ -12,12 +12,20 @@ type Options = {
   signal?: { aborted: boolean }
 };
 
-type Result = {
+type ResultDirectory = {
   directories: string[],
   files: string[],
   symlinks: string[]
 };
 
+type ResultDirectories = {
+  [path: string]: ResultDirectory
+};
+
+type Result = ResultDirectory & {
+  map: ResultDirectories
+};
+
 /* EXPORT */
 
-export {Promisable, Options, Result};
+export {Promisable, Options, ResultDirectory, ResultDirectories, Result};

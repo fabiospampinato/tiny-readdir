@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Limiter from 'promise-concurrency-limiter';
-import {Promisable, Options, Result} from './types';
+import {Promisable, Options, ResultDirectory, ResultDirectories, Result} from './types';
 
 /* HELPERS */
 
@@ -21,49 +21,42 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
         directories: string[] = [],
         files: string[] = [],
         symlinks: string[] = [],
-        resultEmpty: Result = { directories: [], files: [], symlinks: [] },
-        result: Result = { directories, files, symlinks };
+        map: ResultDirectories = {},
+        resultEmpty: Result = { directories: [], files: [], symlinks: [], map: {} },
+        result: Result = { directories, files, symlinks, map };
 
-  const handleDirectory = ( subPath: string, depth: number ): Promisable<void> => {
+  const handleDirectory = ( dirmap: ResultDirectory, subPath: string, depth: number ): Promisable<void> => {
 
+    dirmap.directories.push ( subPath );
     directories.push ( subPath );
 
     if ( depth >= maxDepth ) return;
 
-    return limiter.add ( () => populateResult ( subPath, depth + 1 ) );
+    return limiter.add ( () => populateResultFromPath ( subPath, depth + 1 ) );
 
   };
 
-  const handleFile = ( subPath: string ): void => {
+  const handleFile = ( dirmap: ResultDirectory, subPath: string ): void => {
 
+    dirmap.files.push ( subPath );
     files.push ( subPath );
 
   };
 
-  const handleSymlink = ( subPath: string, depth: number ): Promisable<void> => {
+  const handleSymlink = ( dirmap: ResultDirectory, subPath: string, depth: number ): Promisable<void> => {
 
+    dirmap.symlinks.push ( subPath );
     symlinks.push ( subPath );
 
     if ( !followSymlinks ) return;
 
     if ( depth >= maxDepth ) return;
 
-    return limiter.add ( async () => {
-
-      try {
-
-        const realPath = await fs.promises.realpath ( subPath ),
-              stat = await fs.promises.stat ( realPath );
-
-        await handleStat ( realPath, stat, depth + 1 );
-
-      } catch {}
-
-    });
+    return limiter.add ( () => populateResultFromSymlink ( subPath, depth + 1 ) );
 
   };
 
-  const handleStat = ( rootPath: string, stat: fs.Stats, depth: number ): Promisable<void> => {
+  const handleStat = ( dirmap: ResultDirectory, rootPath: string, stat: fs.Stats, depth: number ): Promisable<void> => {
 
     if ( signal.aborted ) return;
 
@@ -71,21 +64,21 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( stat.isDirectory () ) {
 
-      return handleDirectory ( rootPath, depth );
+      return handleDirectory ( dirmap, rootPath, depth );
 
     } else if ( stat.isFile () ) {
 
-      return handleFile ( rootPath );
+      return handleFile ( dirmap, rootPath );
 
     } else if ( stat.isSymbolicLink () ) {
 
-      return handleSymlink ( rootPath, depth );
+      return handleSymlink ( dirmap, rootPath, depth );
 
     }
 
   };
 
-  const handleDirent = ( rootPath: string, dirent: fs.Dirent, depth: number ): Promisable<void> => {
+  const handleDirent = ( dirmap: ResultDirectory, rootPath: string, dirent: fs.Dirent, depth: number ): Promisable<void> => {
 
     if ( signal.aborted ) return;
 
@@ -95,31 +88,31 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( dirent.isDirectory () ) {
 
-      return handleDirectory ( subPath, depth );
+      return handleDirectory ( dirmap, subPath, depth );
 
     } else if ( dirent.isFile () ) {
 
-      return handleFile ( subPath );
+      return handleFile ( dirmap, subPath );
 
     } else if ( dirent.isSymbolicLink () ) {
 
-      return handleSymlink ( subPath, depth );
+      return handleSymlink ( dirmap, subPath, depth );
 
     }
 
   };
 
-  const handleDirents = ( rootPath: string, dirents: fs.Dirent[], depth: number ): Promise<void[]> => {
+  const handleDirents = ( dirmap: ResultDirectory, rootPath: string, dirents: fs.Dirent[], depth: number ): Promise<void[]> => {
 
     return Promise.all ( dirents.map ( ( dirent ): Promisable<void> => {
 
-      return handleDirent ( rootPath, dirent, depth );
+      return handleDirent ( dirmap, rootPath, dirent, depth );
 
     }));
 
   };
 
-  const populateResult = async ( rootPath: string, depth: number ): Promise<void> => {
+  const populateResultFromPath = async ( rootPath: string, depth: number ): Promise<void> => {
 
     if ( signal.aborted ) return;
 
@@ -129,9 +122,25 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( signal.aborted ) return;
 
+    const dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
+
     if ( !dirents.length ) return;
 
-    await handleDirents ( rootPath, dirents, depth );
+    await handleDirents ( dirmap, rootPath, dirents, depth );
+
+  };
+
+  const populateResultFromSymlink = async ( rootPath: string, depth: number ): Promise<void> => {
+
+    try {
+
+      const realPath = await fs.promises.realpath ( rootPath ),
+            stat = await fs.promises.stat ( realPath ),
+            dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
+
+      await handleStat ( dirmap, realPath, stat, depth );
+
+    } catch {}
 
   };
 
@@ -139,7 +148,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     rootPath = path.normalize ( rootPath );
 
-    await populateResult ( rootPath, depth );
+    await populateResultFromPath ( rootPath, depth );
 
     if ( signal.aborted ) return resultEmpty;
 
