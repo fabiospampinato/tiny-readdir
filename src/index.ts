@@ -22,13 +22,17 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const files: string[] = [];
   const symlinks: string[] = [];
   const map: ResultDirectories = {};
+  const visited = new Set<string> ();
   const resultEmpty: Result = { directories: [], files: [], symlinks: [], map: {} };
   const result: Result = { directories, files, symlinks, map };
 
   const handleDirectory = ( dirmap: ResultDirectory, subPath: string, depth: number ): Promisable<void> => {
 
+    if ( visited.has ( subPath ) ) return;
+
     dirmap.directories.push ( subPath );
     directories.push ( subPath );
+    visited.add ( subPath );
 
     if ( depth >= maxDepth ) return;
 
@@ -38,15 +42,21 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   const handleFile = ( dirmap: ResultDirectory, subPath: string ): void => {
 
+    if ( visited.has ( subPath ) ) return;
+
     dirmap.files.push ( subPath );
     files.push ( subPath );
+    visited.add ( subPath );
 
   };
 
   const handleSymlink = ( dirmap: ResultDirectory, subPath: string, depth: number ): Promisable<void> => {
 
+    if ( visited.has ( subPath ) ) return;
+
     dirmap.symlinks.push ( subPath );
     symlinks.push ( subPath );
+    visited.add ( subPath );
 
     if ( !followSymlinks ) return;
 
@@ -147,6 +157,8 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const getResult = async ( rootPath: string, depth: number = 1 ): Promise<Result> => {
 
     rootPath = path.normalize ( rootPath );
+
+    visited.add ( rootPath );
 
     await populateResultFromPath ( rootPath, depth );
 

@@ -37,12 +37,12 @@ describe ( 'Tiny Readdir', it => {
     fs.writeFileSync ( file2Path, '' );
     fs.writeFileSync ( fileDeep1Path, '' );
     fs.symlinkSync ( symlink1ToPath, symlink1FromPath );
-    // fs.symlinkSync ( symlink2ToPath, symlink2FromPath );
+    fs.symlinkSync ( symlink2ToPath, symlink2FromPath );
 
     const expected = {
       directories: [folder1Path, folder2Path, folder1DeepPath, root2Path],
       files: [file1aPath, file1bPath, file2Path, fileDeep1Path],
-      symlinks: [symlink1FromPath],
+      symlinks: [symlink1FromPath, symlink2FromPath],
       map: {
         [root1Path]: {
           directories: [folder1Path, folder2Path],
@@ -52,7 +52,7 @@ describe ( 'Tiny Readdir', it => {
         [root2Path]: {
           directories: [],
           files: [],
-          symlinks: []
+          symlinks: [symlink2FromPath]
         },
         [folder1Path]: {
           directories: [folder1DeepPath],
@@ -71,6 +71,11 @@ describe ( 'Tiny Readdir', it => {
         },
         [symlink1FromPath]: {
           directories: [root2Path],
+          files: [],
+          symlinks: []
+        },
+        [symlink2FromPath]: {
+          directories: [],
           files: [],
           symlinks: []
         }
