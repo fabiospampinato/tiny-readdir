@@ -1,9 +1,9 @@
 
 /* HELPERS */
 
-type Promisable<T> = T | Promise<T>;
+type Promisable<T> = Promise<T> | T;
 
-/* TYPES */
+/* MAIN */
 
 type Options = {
   depth?: number,
@@ -28,4 +28,4 @@ type Result = ResultDirectory & {
 
 /* EXPORT */
 
-export {Promisable, Options, ResultDirectory, ResultDirectories, Result};
+export type {Promisable, Options, ResultDirectory, ResultDirectories, Result};

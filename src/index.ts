@@ -1,29 +1,29 @@
 
 /* IMPORT */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import Limiter from 'promise-concurrency-limiter';
-import {Promisable, Options, ResultDirectory, ResultDirectories, Result} from './types';
+import type {Promisable, Options, ResultDirectory, ResultDirectories, Result} from './types';
 
 /* HELPERS */
 
 const limiter = new Limiter ({ concurrency: 500 });
 
-/* TINY READDIR */
+/* MAIN */
 
 const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
-  const followSymlinks = options?.followSymlinks ?? false,
-        maxDepth = options?.depth ?? Infinity,
-        isIgnored = options?.ignore ?? (() => false),
-        signal = options?.signal ?? { aborted: false },
-        directories: string[] = [],
-        files: string[] = [],
-        symlinks: string[] = [],
-        map: ResultDirectories = {},
-        resultEmpty: Result = { directories: [], files: [], symlinks: [], map: {} },
-        result: Result = { directories, files, symlinks, map };
+  const followSymlinks = options?.followSymlinks ?? false;
+  const maxDepth = options?.depth ?? Infinity;
+  const isIgnored = options?.ignore ?? (() => false);
+  const signal = options?.signal ?? { aborted: false };
+  const directories: string[] = [];
+  const files: string[] = [];
+  const symlinks: string[] = [];
+  const map: ResultDirectories = {};
+  const resultEmpty: Result = { directories: [], files: [], symlinks: [], map: {} };
+  const result: Result = { directories, files, symlinks, map };
 
   const handleDirectory = ( dirmap: ResultDirectory, subPath: string, depth: number ): Promisable<void> => {
 
@@ -134,9 +134,9 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     try {
 
-      const realPath = await fs.promises.realpath ( rootPath ),
-            stat = await fs.promises.stat ( realPath ),
-            dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
+      const realPath = await fs.promises.realpath ( rootPath );
+      const stat = await fs.promises.stat ( realPath );
+      const dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
 
       await handleStat ( dirmap, realPath, stat, depth );
 
