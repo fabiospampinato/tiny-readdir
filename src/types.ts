@@ -7,6 +7,7 @@ type Promisable<T> = Promise<T> | T;
 
 type Options = {
   depth?: number,
+  limit?: number,
   followSymlinks?: boolean,
   ignore?: ( targetPath: string ) => boolean,
   signal?: { aborted: boolean }

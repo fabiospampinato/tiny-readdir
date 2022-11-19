@@ -11,6 +11,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   const followSymlinks = options?.followSymlinks ?? false;
   const maxDepth = options?.depth ?? Infinity;
+  const maxPaths = options?.limit ?? Infinity;
   const isIgnored = options?.ignore ?? (() => false);
   const signal = options?.signal ?? { aborted: false };
   const directories: string[] = [];
@@ -21,15 +22,22 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const resultEmpty: Result = { directories: [], files: [], symlinks: [], map: {} };
   const result: Result = { directories, files, symlinks, map };
 
+  let foundPaths = 0;
+
   const handleDirectory = ( dirmap: ResultDirectory, subPath: string, depth: number ): Promisable<void> => {
 
     if ( visited.has ( subPath ) ) return;
 
+    if ( foundPaths >= maxPaths ) return;
+
+    foundPaths += 1;
     dirmap.directories.push ( subPath );
     directories.push ( subPath );
     visited.add ( subPath );
 
     if ( depth >= maxDepth ) return;
+
+    if ( foundPaths >= maxPaths ) return;
 
     return populateResultFromPath ( subPath, depth + 1 );
 
@@ -39,6 +47,9 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( visited.has ( subPath ) ) return;
 
+    if ( foundPaths >= maxPaths ) return;
+
+    foundPaths += 1;
     dirmap.files.push ( subPath );
     files.push ( subPath );
     visited.add ( subPath );
@@ -49,6 +60,9 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( visited.has ( subPath ) ) return;
 
+    if ( foundPaths >= maxPaths ) return;
+
+    foundPaths += 1;
     dirmap.symlinks.push ( subPath );
     symlinks.push ( subPath );
     visited.add ( subPath );
@@ -56,6 +70,8 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
     if ( !followSymlinks ) return;
 
     if ( depth >= maxDepth ) return;
+
+    if ( foundPaths >= maxPaths ) return;
 
     return populateResultFromSymlink ( subPath, depth + 1 );
 
@@ -123,6 +139,8 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
     if ( signal.aborted ) return;
 
     if ( depth > maxDepth ) return;
+
+    if ( foundPaths >= maxPaths ) return;
 
     const dirents = await fs.promises.readdir ( rootPath, { withFileTypes: true } ).catch ( () => [] );
 
