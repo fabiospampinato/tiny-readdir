@@ -87,7 +87,8 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( signal.aborted ) return;
 
-    const subPath = `${rootPath}${path.sep}${dirent.name}`;
+    const separator = ( rootPath === path.sep ) ? '' : path.sep;
+    const subPath = `${rootPath}${separator}${dirent.name}`;
 
     if ( isIgnored ( subPath ) ) return;
 
