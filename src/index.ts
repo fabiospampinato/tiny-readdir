@@ -3,12 +3,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import Limiter from 'promise-concurrency-limiter';
 import type {Promisable, Options, ResultDirectory, ResultDirectories, Result} from './types';
-
-/* HELPERS */
-
-const limiter = new Limiter ({ concurrency: 500 });
 
 /* MAIN */
 
@@ -36,7 +31,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( depth >= maxDepth ) return;
 
-    return limiter.add ( () => populateResultFromPath ( subPath, depth + 1 ) );
+    return populateResultFromPath ( subPath, depth + 1 );
 
   };
 
@@ -62,7 +57,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( depth >= maxDepth ) return;
 
-    return limiter.add ( () => populateResultFromSymlink ( subPath, depth + 1 ) );
+    return populateResultFromSymlink ( subPath, depth + 1 );
 
   };
 

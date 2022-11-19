@@ -11,8 +11,9 @@
     "clean": "tsex clean",
     "compile": "tsex compile",
     "compile:watch": "tsex compile --watch",
-    "test": "tsex test",
-    "test:watch": "tsex test --watch",
+    "test": "npm run test:native && npm run test:yielding",
+    "test:native": "fava '**/native.js'",
+    "test:yielding": "node test/yielding.js",
     "prepublishOnly": "npm run clean && npm run compile && npm run test"
   },
   "keywords": [
@@ -22,13 +23,10 @@
     "simple",
     "tiny"
   ],
-  "dependencies": {
-    "promise-concurrency-limiter": "^2.0.0"
-  },
   "devDependencies": {
-    "@types/node": "^17.0.23",
-    "fava": "^0.0.6",
-    "tsex": "^1.1.1",
-    "typescript": "^4.6.3"
+    "@types/node": "^18.11.9",
+    "fava": "^0.0.7",
+    "tsex": "^1.1.3",
+    "typescript": "^4.9.3"
   }
 }
