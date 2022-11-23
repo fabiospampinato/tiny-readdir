@@ -9,7 +9,7 @@ type Options = {
   depth?: number,
   limit?: number,
   followSymlinks?: boolean,
-  ignore?: ( targetPath: string ) => boolean,
+  ignore?: (( targetPath: string ) => boolean) | RegExp,
   signal?: { aborted: boolean }
 };
 

@@ -3,6 +3,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import {isFunction} from './utils';
 import type {Promisable, Options, ResultDirectory, ResultDirectories, Result} from './types';
 
 /* MAIN */
@@ -12,7 +13,8 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const followSymlinks = options?.followSymlinks ?? false;
   const maxDepth = options?.depth ?? Infinity;
   const maxPaths = options?.limit ?? Infinity;
-  const isIgnored = options?.ignore ?? (() => false);
+  const ignore = options?.ignore ?? (() => false);
+  const isIgnored = isFunction ( ignore ) ? ignore : ( targetPath: string ) => ignore.test ( targetPath );
   const signal = options?.signal ?? { aborted: false };
   const directories: string[] = [];
   const files: string[] = [];
