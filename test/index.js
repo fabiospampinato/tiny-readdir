@@ -164,4 +164,38 @@ describe ( 'Tiny Readdir', it => {
 
   });
 
+  it ( 'does not freeze the main thread', async t => {
+
+    return new Promise ( resolve => {
+
+      let count = 0;
+      let start = Date.now ();
+
+      const aborter = new AbortController ();
+      const signal = aborter.signal;
+
+      const intervalId = setInterval ( () => {
+        count += 1;
+        console.log ( 'tick', count );
+        if ( count !== 100 ) return;
+        clearInterval ( intervalId );
+        const end = Date.now ();
+        const elapsed = end - start;
+        console.log ( 'elapsed', elapsed );
+        console.log ( elapsed );
+        if ( elapsed > 1500 ) {
+          t.fail ();
+        } else {
+          t.pass ();
+        }
+        aborter.abort ();
+        resolve ();
+      }, 10 );
+
+      readdir ( '/', { signal } );
+
+    });
+
+  });
+
 });

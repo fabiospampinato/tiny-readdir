@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {isFunction} from './utils';
-import type {Promisable, Options, ResultDirectory, ResultDirectories, Result} from './types';
+import type {PromiseLike, Options, ResultDirectory, ResultDirectories, Result} from './types';
 
 /* MAIN */
 
@@ -26,7 +26,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   let foundPaths = 0;
 
-  const handleDirectory = ( dirmap: ResultDirectory, subPath: string, depth: number ): Promisable<void> => {
+  const handleDirectory = ( dirmap: ResultDirectory, subPath: string, depth: number ): PromiseLike<void> => {
 
     if ( visited.has ( subPath ) ) return;
 
@@ -58,7 +58,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const handleSymlink = ( dirmap: ResultDirectory, subPath: string, depth: number ): Promisable<void> => {
+  const handleSymlink = ( dirmap: ResultDirectory, subPath: string, depth: number ): PromiseLike<void> => {
 
     if ( visited.has ( subPath ) ) return;
 
@@ -79,7 +79,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const handleStat = ( dirmap: ResultDirectory, rootPath: string, stat: fs.Stats, depth: number ): Promisable<void> => {
+  const handleStat = ( dirmap: ResultDirectory, rootPath: string, stat: fs.Stats, depth: number ): PromiseLike<void> => {
 
     if ( signal.aborted ) return;
 
@@ -101,7 +101,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const handleDirent = ( dirmap: ResultDirectory, rootPath: string, dirent: fs.Dirent, depth: number ): Promisable<void> => {
+  const handleDirent = ( dirmap: ResultDirectory, rootPath: string, dirent: fs.Dirent, depth: number ): PromiseLike<void> => {
 
     if ( signal.aborted ) return;
 
@@ -128,7 +128,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   const handleDirents = ( dirmap: ResultDirectory, rootPath: string, dirents: fs.Dirent[], depth: number ): Promise<void[]> => {
 
-    return Promise.all ( dirents.map ( ( dirent ): Promisable<void> => {
+    return Promise.all ( dirents.map ( ( dirent ): PromiseLike<void> => {
 
       return handleDirent ( dirmap, rootPath, dirent, depth );
 

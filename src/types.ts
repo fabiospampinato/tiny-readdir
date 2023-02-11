@@ -1,7 +1,7 @@
 
 /* HELPERS */
 
-type Promisable<T> = Promise<T> | T;
+type PromiseLike<T> = Promise<T> | T;
 
 /* MAIN */
 
@@ -29,4 +29,4 @@ type Result = ResultDirectory & {
 
 /* EXPORT */
 
-export type {Promisable, Options, ResultDirectory, ResultDirectories, Result};
+export type {PromiseLike, Options, ResultDirectory, ResultDirectories, Result};
