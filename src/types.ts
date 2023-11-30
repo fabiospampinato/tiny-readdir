@@ -1,7 +1,7 @@
 
 /* HELPERS */
 
-type PromiseLike<T> = Promise<T> | T;
+type Callback = () => void;
 
 /* MAIN */
 
@@ -29,4 +29,4 @@ type Result = ResultDirectory & {
 
 /* EXPORT */
 
-export type {PromiseLike, Options, ResultDirectory, ResultDirectories, Result};
+export type {Callback, Options, ResultDirectory, ResultDirectories, Result};

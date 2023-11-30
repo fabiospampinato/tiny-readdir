@@ -3,8 +3,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import {isFunction} from './utils';
-import type {PromiseLike, Options, ResultDirectory, ResultDirectories, Result} from './types';
+import {isFunction, makeCounterPromise} from './utils';
+import type {Options, ResultDirectory, ResultDirectories, Result} from './types';
 
 /* MAIN */
 
@@ -23,10 +23,11 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const visited = new Set<string> ();
   const resultEmpty: Result = { directories: [], files: [], symlinks: [], map: {} };
   const result: Result = { directories, files, symlinks, map };
+  const {promise, increment, decrement} = makeCounterPromise ();
 
   let foundPaths = 0;
 
-  const handleDirectory = ( dirmap: ResultDirectory, subPath: string, depth: number ): PromiseLike<void> => {
+  const handleDirectory = ( dirmap: ResultDirectory, subPath: string, depth: number ): void => {
 
     if ( visited.has ( subPath ) ) return;
 
@@ -41,7 +42,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( foundPaths >= maxPaths ) return;
 
-    return populateResultFromPath ( subPath, depth + 1 );
+    populateResultFromPath ( subPath, depth + 1 );
 
   };
 
@@ -58,7 +59,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const handleSymlink = ( dirmap: ResultDirectory, subPath: string, depth: number ): PromiseLike<void> => {
+  const handleSymlink = ( dirmap: ResultDirectory, subPath: string, depth: number ): void => {
 
     if ( visited.has ( subPath ) ) return;
 
@@ -75,11 +76,11 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( foundPaths >= maxPaths ) return;
 
-    return populateResultFromSymlink ( subPath, depth + 1 );
+    populateResultFromSymlink ( subPath, depth + 1 );
 
   };
 
-  const handleStat = ( dirmap: ResultDirectory, rootPath: string, stat: fs.Stats, depth: number ): PromiseLike<void> => {
+  const handleStat = ( dirmap: ResultDirectory, rootPath: string, stat: fs.Stats, depth: number ): void => {
 
     if ( signal.aborted ) return;
 
@@ -87,21 +88,21 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( stat.isDirectory () ) {
 
-      return handleDirectory ( dirmap, rootPath, depth );
+      handleDirectory ( dirmap, rootPath, depth );
 
     } else if ( stat.isFile () ) {
 
-      return handleFile ( dirmap, rootPath );
+      handleFile ( dirmap, rootPath );
 
     } else if ( stat.isSymbolicLink () ) {
 
-      return handleSymlink ( dirmap, rootPath, depth );
+      handleSymlink ( dirmap, rootPath, depth );
 
     }
 
   };
 
-  const handleDirent = ( dirmap: ResultDirectory, rootPath: string, dirent: fs.Dirent, depth: number ): PromiseLike<void> => {
+  const handleDirent = ( dirmap: ResultDirectory, rootPath: string, dirent: fs.Dirent, depth: number ): void => {
 
     if ( signal.aborted ) return;
 
@@ -112,31 +113,31 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( dirent.isDirectory () ) {
 
-      return handleDirectory ( dirmap, subPath, depth );
+      handleDirectory ( dirmap, subPath, depth );
 
     } else if ( dirent.isFile () ) {
 
-      return handleFile ( dirmap, subPath );
+      handleFile ( dirmap, subPath );
 
     } else if ( dirent.isSymbolicLink () ) {
 
-      return handleSymlink ( dirmap, subPath, depth );
+      handleSymlink ( dirmap, subPath, depth );
 
     }
 
   };
 
-  const handleDirents = ( dirmap: ResultDirectory, rootPath: string, dirents: fs.Dirent[], depth: number ): Promise<void[]> => {
+  const handleDirents = ( dirmap: ResultDirectory, rootPath: string, dirents: fs.Dirent[], depth: number ): void => {
 
-    return Promise.all ( dirents.map ( ( dirent ): PromiseLike<void> => {
+    for ( let i = 0, l = dirents.length; i < l; i++ ) {
 
-      return handleDirent ( dirmap, rootPath, dirent, depth );
+      handleDirent ( dirmap, rootPath, dirents[i], depth );
 
-    }));
+    }
 
   };
 
-  const populateResultFromPath = async ( rootPath: string, depth: number ): Promise<void> => {
+  const populateResultFromPath = ( rootPath: string, depth: number ): void => {
 
     if ( signal.aborted ) return;
 
@@ -144,29 +145,51 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( foundPaths >= maxPaths ) return;
 
-    const dirents = await fs.promises.readdir ( rootPath, { withFileTypes: true } ).catch ( () => [] );
+    increment ();
 
-    if ( signal.aborted ) return;
+    fs.readdir ( rootPath, { withFileTypes: true }, ( error, dirents ) => {
 
-    const dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
+      if ( error ) return decrement ();
 
-    if ( !dirents.length ) return;
+      if ( signal.aborted ) return decrement ();
 
-    await handleDirents ( dirmap, rootPath, dirents, depth );
+      if ( !dirents.length ) return decrement ();
+
+      const dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
+
+      handleDirents ( dirmap, rootPath, dirents, depth );
+
+      decrement ();
+
+    });
 
   };
 
   const populateResultFromSymlink = async ( rootPath: string, depth: number ): Promise<void> => {
 
-    try {
+    increment ();
 
-      const realPath = await fs.promises.realpath ( rootPath );
-      const stat = await fs.promises.stat ( realPath );
-      const dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
+    fs.realpath ( rootPath, ( error, realPath ) => {
 
-      await handleStat ( dirmap, realPath, stat, depth );
+      if ( error ) return decrement ();
 
-    } catch {}
+      if ( signal.aborted ) return decrement ();
+
+      fs.stat ( realPath, async ( error, stat ) => {
+
+        if ( error ) return decrement ();
+
+        if ( signal.aborted ) return decrement ();
+
+        const dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
+
+        handleStat ( dirmap, realPath, stat, depth );
+
+        decrement ();
+
+      });
+
+    });
 
   };
 
@@ -176,7 +199,9 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     visited.add ( rootPath );
 
-    await populateResultFromPath ( rootPath, depth );
+    populateResultFromPath ( rootPath, depth );
+
+    await promise;
 
     if ( signal.aborted ) return resultEmpty;
 

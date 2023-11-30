@@ -1,4 +1,9 @@
 
+/* IMPORT */
+
+import makeNakedPromise from 'promise-make-naked';
+import type {Callback} from './types';
+
 /* MAIN */
 
 const isFunction = ( value: unknown ): value is Function => {
@@ -7,6 +12,32 @@ const isFunction = ( value: unknown ): value is Function => {
 
 };
 
+const makeCounterPromise = (): { promise: Promise<void>, increment: Callback, decrement: Callback } => {
+
+  const {promise, resolve} = makeNakedPromise<void> ();
+
+  let counter = 0;
+
+  const increment = (): void => {
+
+    counter += 1;
+
+  };
+
+  const decrement = (): void => {
+
+    counter -= 1;
+
+    if ( counter ) return;
+
+    resolve ();
+
+  };
+
+  return { promise, increment, decrement };
+
+};
+
 /* EXPORT */
 
-export {isFunction};
+export {isFunction, makeCounterPromise};
