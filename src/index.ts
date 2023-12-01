@@ -17,17 +17,20 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const isIgnored = isFunction ( ignore ) ? ignore : ( targetPath: string ) => ignore.test ( targetPath );
   const signal = options?.signal ?? { aborted: false };
   const directories: string[] = [];
+  const directoriesNames: Set<string> = new Set ();
   const files: string[] = [];
+  const filesNames: Set<string> = new Set ();
   const symlinks: string[] = [];
+  const symlinksNames: Set<string> = new Set ();
   const map: ResultDirectories = {};
   const visited = new Set<string> ();
-  const resultEmpty: Result = { directories: [], files: [], symlinks: [], map: {} };
-  const result: Result = { directories, files, symlinks, map };
+  const resultEmpty: Result = { directories: [], directoriesNames: new Set (), files: [], filesNames: new Set (), symlinks: [], symlinksNames: new Set (), map: {} };
+  const result: Result = { directories, directoriesNames, files, filesNames, symlinks, symlinksNames, map };
   const {promise, increment, decrement} = makeCounterPromise ();
 
   let foundPaths = 0;
 
-  const handleDirectory = ( dirmap: ResultDirectory, subPath: string, depth: number ): void => {
+  const handleDirectory = ( dirmap: ResultDirectory, subPath: string, name: string, depth: number ): void => {
 
     if ( visited.has ( subPath ) ) return;
 
@@ -35,7 +38,9 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     foundPaths += 1;
     dirmap.directories.push ( subPath );
+    dirmap.directoriesNames.add ( name );
     directories.push ( subPath );
+    directoriesNames.add ( name );
     visited.add ( subPath );
 
     if ( depth >= maxDepth ) return;
@@ -46,7 +51,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const handleFile = ( dirmap: ResultDirectory, subPath: string ): void => {
+  const handleFile = ( dirmap: ResultDirectory, subPath: string, name: string ): void => {
 
     if ( visited.has ( subPath ) ) return;
 
@@ -54,12 +59,14 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     foundPaths += 1;
     dirmap.files.push ( subPath );
+    dirmap.filesNames.add ( name );
     files.push ( subPath );
+    filesNames.add ( name );
     visited.add ( subPath );
 
   };
 
-  const handleSymlink = ( dirmap: ResultDirectory, subPath: string, depth: number ): void => {
+  const handleSymlink = ( dirmap: ResultDirectory, subPath: string, name: string, depth: number ): void => {
 
     if ( visited.has ( subPath ) ) return;
 
@@ -67,7 +74,9 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     foundPaths += 1;
     dirmap.symlinks.push ( subPath );
+    dirmap.symlinksNames.add ( name );
     symlinks.push ( subPath );
+    symlinksNames.add ( name );
     visited.add ( subPath );
 
     if ( !followSymlinks ) return;
@@ -80,7 +89,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const handleStat = ( dirmap: ResultDirectory, rootPath: string, stat: fs.Stats, depth: number ): void => {
+  const handleStat = ( dirmap: ResultDirectory, rootPath: string, name: string, stat: fs.Stats, depth: number ): void => {
 
     if ( signal.aborted ) return;
 
@@ -88,15 +97,15 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( stat.isDirectory () ) {
 
-      handleDirectory ( dirmap, rootPath, depth );
+      handleDirectory ( dirmap, rootPath, name, depth );
 
     } else if ( stat.isFile () ) {
 
-      handleFile ( dirmap, rootPath );
+      handleFile ( dirmap, rootPath, name );
 
     } else if ( stat.isSymbolicLink () ) {
 
-      handleSymlink ( dirmap, rootPath, depth );
+      handleSymlink ( dirmap, rootPath, name, depth );
 
     }
 
@@ -107,21 +116,22 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
     if ( signal.aborted ) return;
 
     const separator = ( rootPath === path.sep ) ? '' : path.sep;
-    const subPath = `${rootPath}${separator}${dirent.name}`;
+    const name = dirent.name;
+    const subPath = `${rootPath}${separator}${name}`;
 
     if ( isIgnored ( subPath ) ) return;
 
     if ( dirent.isDirectory () ) {
 
-      handleDirectory ( dirmap, subPath, depth );
+      handleDirectory ( dirmap, subPath, name, depth );
 
     } else if ( dirent.isFile () ) {
 
-      handleFile ( dirmap, subPath );
+      handleFile ( dirmap, subPath, name );
 
     } else if ( dirent.isSymbolicLink () ) {
 
-      handleSymlink ( dirmap, subPath, depth );
+      handleSymlink ( dirmap, subPath, name, depth );
 
     }
 
@@ -155,7 +165,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
       if ( !dirents.length ) return decrement ();
 
-      const dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
+      const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), files: [], filesNames: new Set (), symlinks: [], symlinksNames: new Set () };
 
       handleDirents ( dirmap, rootPath, dirents, depth );
 
@@ -181,9 +191,10 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
         if ( signal.aborted ) return decrement ();
 
-        const dirmap = map[rootPath] = { directories: [], files: [], symlinks: [] };
+        const name = path.basename ( realPath );
+        const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), files: [], filesNames: new Set (), symlinks: [], symlinksNames: new Set () };
 
-        handleStat ( dirmap, realPath, stat, depth );
+        handleStat ( dirmap, realPath, name, stat, depth );
 
         decrement ();
 

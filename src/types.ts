@@ -15,8 +15,11 @@ type Options = {
 
 type ResultDirectory = {
   directories: string[],
+  directoriesNames: Set<string>,
   files: string[],
-  symlinks: string[]
+  filesNames: Set<string>,
+  symlinks: string[],
+  symlinksNames: Set<string>
 };
 
 type ResultDirectories = {
