@@ -46,66 +46,90 @@ describe ( 'Tiny Readdir', it => {
     const expected = {
       directories: [folder1Path, folder2Path, folder1DeepPath, root2Path],
       directoriesNames: new Set ( [folder1Path, folder2Path, folder1DeepPath, root2Path].map ( toBasename ) ),
+      directoriesNamesToPaths: { folder1: [folder1Path], folder2: [folder2Path], deep: [folder1DeepPath], root2: [root2Path] },
       files: [file1aPath, file1bPath, file2Path, fileDeep1Path],
       filesNames: new Set ( [file1aPath, file1bPath, file2Path, fileDeep1Path].map ( toBasename ) ),
+      filesNamesToPaths: { 'file1a.txt': [file1aPath], 'file1b.txt': [file1bPath], 'file2.txt': [file2Path], 'file1.txt': [fileDeep1Path] },
       symlinks: [symlink1FromPath, symlink2FromPath],
       symlinksNames: new Set ( [symlink1FromPath, symlink2FromPath].map ( toBasename ) ),
+      symlinksNamesToPaths: { symlink: [symlink1FromPath, symlink2FromPath] },
       map: {
         [root1Path]: {
           directories: [folder1Path, folder2Path],
           directoriesNames: new Set ( [folder1Path, folder2Path].map ( toBasename ) ),
+          directoriesNamesToPaths: {},
           files: [],
           filesNames: new Set (),
+          filesNamesToPaths: {},
           symlinks: [symlink1FromPath],
-          symlinksNames: new Set ( [symlink1FromPath].map ( toBasename ) )
+          symlinksNames: new Set ( [symlink1FromPath].map ( toBasename ) ),
+          symlinksNamesToPaths: {}
         },
         [root2Path]: {
           directories: [],
           directoriesNames: new Set (),
+          directoriesNamesToPaths: {},
           files: [],
           filesNames: new Set (),
+          filesNamesToPaths: {},
           symlinks: [symlink2FromPath],
-          symlinksNames: new Set ( [symlink2FromPath].map ( toBasename ) )
+          symlinksNames: new Set ( [symlink2FromPath].map ( toBasename ) ),
+          symlinksNamesToPaths: {}
         },
         [folder1Path]: {
           directories: [folder1DeepPath],
           directoriesNames: new Set ( [folder1DeepPath].map ( toBasename ) ),
+          directoriesNamesToPaths: {},
           files: [file1aPath, file1bPath],
           filesNames: new Set ( [file1aPath, file1bPath].map ( toBasename ) ),
+          filesNamesToPaths: {},
           symlinks: [],
-          symlinksNames: new Set ()
+          symlinksNames: new Set (),
+          symlinksNamesToPaths: {}
         },
         [folder2Path]: {
           directories: [],
           directoriesNames: new Set (),
+          directoriesNamesToPaths: {},
           files: [file2Path],
           filesNames: new Set ( [file2Path].map ( toBasename ) ),
+          filesNamesToPaths: {},
           symlinks: [],
-          symlinksNames: new Set ()
+          symlinksNames: new Set (),
+          symlinksNamesToPaths: {}
         },
         [folder1DeepPath]: {
           directories: [],
           directoriesNames: new Set (),
+          directoriesNamesToPaths: {},
           files: [fileDeep1Path],
           filesNames: new Set ( [fileDeep1Path].map ( toBasename ) ),
+          filesNamesToPaths: {},
           symlinks: [],
-          symlinksNames: new Set ()
+          symlinksNames: new Set (),
+          symlinksNamesToPaths: {}
         },
         [symlink1FromPath]: {
           directories: [root2Path],
           directoriesNames: new Set ( [root2Path].map ( toBasename ) ),
+          directoriesNamesToPaths: {},
           files: [],
           filesNames: new Set (),
+          filesNamesToPaths: {},
           symlinks: [],
-          symlinksNames: new Set ()
+          symlinksNames: new Set (),
+          symlinksNamesToPaths: {}
         },
         [symlink2FromPath]: {
           directories: [],
           directoriesNames: new Set (),
+          directoriesNamesToPaths: {},
           files: [],
           filesNames: new Set (),
+          filesNamesToPaths: {},
           symlinks: [],
-          symlinksNames: new Set ()
+          symlinksNames: new Set (),
+          symlinksNamesToPaths: {}
         }
       }
     };
@@ -157,34 +181,46 @@ describe ( 'Tiny Readdir', it => {
     const expected = {
       directories: [folder1Path, folder2Path],
       directoriesNames: new Set ( [folder1Path, folder2Path].map ( toBasename ) ),
+      directoriesNamesToPaths: { folder1: [folder1Path], folder2: [folder2Path] },
       files: [],
       filesNames: new Set (),
+      filesNamesToPaths: {},
       symlinks: [symlink1FromPath],
       symlinksNames: new Set ( [symlink1FromPath].map ( toBasename ) ),
+      symlinksNamesToPaths: { symlink: [symlink1FromPath] },
       map: {
         [root1Path]: {
           directories: [folder1Path, folder2Path],
           directoriesNames: new Set ( [folder1Path, folder2Path].map ( toBasename ) ),
+          directoriesNamesToPaths: {},
           files: [],
           filesNames: new Set (),
+          filesNamesToPaths: {},
           symlinks: [symlink1FromPath],
-          symlinksNames: new Set ( [symlink1FromPath].map ( toBasename ) )
+          symlinksNames: new Set ( [symlink1FromPath].map ( toBasename ) ),
+          symlinksNamesToPaths: {}
         },
         [folder1Path]: {
           directories: [],
           directoriesNames: new Set (),
+          directoriesNamesToPaths: {},
           files: [],
           filesNames: new Set (),
+          filesNamesToPaths: {},
           symlinks: [],
-          symlinksNames: new Set ()
+          symlinksNames: new Set (),
+          symlinksNamesToPaths: {}
         },
         [folder2Path]: {
           directories: [],
           directoriesNames: new Set (),
+          directoriesNamesToPaths: {},
           files: [],
           filesNames: new Set (),
+          filesNamesToPaths: {},
           symlinks: [],
-          symlinksNames: new Set ()
+          symlinksNames: new Set (),
+          symlinksNamesToPaths: {}
         }
       }
     };

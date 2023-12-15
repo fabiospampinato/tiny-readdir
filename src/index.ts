@@ -8,6 +8,8 @@ import type {Options, ResultDirectory, ResultDirectories, Result} from './types'
 
 /* MAIN */
 
+//TODO: Streamline the type of dirnmaps
+
 const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   const followSymlinks = options?.followSymlinks ?? false;
@@ -18,14 +20,17 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const signal = options?.signal ?? { aborted: false };
   const directories: string[] = [];
   const directoriesNames: Set<string> = new Set ();
+  const directoriesNamesToPaths: Record<string, string[]> = {};
   const files: string[] = [];
   const filesNames: Set<string> = new Set ();
+  const filesNamesToPaths: Record<string, string[]> = {};
   const symlinks: string[] = [];
   const symlinksNames: Set<string> = new Set ();
+  const symlinksNamesToPaths: Record<string, string[]> = {};
   const map: ResultDirectories = {};
   const visited = new Set<string> ();
-  const resultEmpty: Result = { directories: [], directoriesNames: new Set (), files: [], filesNames: new Set (), symlinks: [], symlinksNames: new Set (), map: {} };
-  const result: Result = { directories, directoriesNames, files, filesNames, symlinks, symlinksNames, map };
+  const resultEmpty: Result = { directories: [], directoriesNames: new Set (), directoriesNamesToPaths: {}, files: [], filesNames: new Set (), filesNamesToPaths: {}, symlinks: [], symlinksNames: new Set (), symlinksNamesToPaths: {}, map: {} };
+  const result: Result = { directories, directoriesNames, directoriesNamesToPaths, files, filesNames, filesNamesToPaths, symlinks, symlinksNames, symlinksNamesToPaths, map };
   const {promise, increment, decrement} = makeCounterPromise ();
 
   let foundPaths = 0;
@@ -39,8 +44,12 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
     foundPaths += 1;
     dirmap.directories.push ( subPath );
     dirmap.directoriesNames.add ( name );
+    // dirmap.directoriesNamesToPaths.propertyIsEnumerable(name) || ( dirmap.directoriesNamesToPaths[name] = [] );
+    // dirmap.directoriesNamesToPaths[name].push ( subPath );
     directories.push ( subPath );
     directoriesNames.add ( name );
+    directoriesNamesToPaths.propertyIsEnumerable(name) || ( directoriesNamesToPaths[name] = [] );
+    directoriesNamesToPaths[name].push ( subPath );
     visited.add ( subPath );
 
     if ( depth >= maxDepth ) return;
@@ -60,8 +69,12 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
     foundPaths += 1;
     dirmap.files.push ( subPath );
     dirmap.filesNames.add ( name );
+    // dirmap.filesNamesToPaths.propertyIsEnumerable(name) ||  ( dirmap.filesNamesToPaths[name] = [] );
+    // dirmap.filesNamesToPaths[name].push ( subPath );
     files.push ( subPath );
     filesNames.add ( name );
+    filesNamesToPaths.propertyIsEnumerable(name) || ( filesNamesToPaths[name] = [] );
+    filesNamesToPaths[name].push ( subPath );
     visited.add ( subPath );
 
   };
@@ -75,8 +88,12 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
     foundPaths += 1;
     dirmap.symlinks.push ( subPath );
     dirmap.symlinksNames.add ( name );
+    // dirmap.symlinksNamesToPaths.propertyIsEnumerable(name) || ( dirmap.symlinksNamesToPaths[name] = [] );
+    // dirmap.symlinksNamesToPaths[name].push ( subPath );
     symlinks.push ( subPath );
     symlinksNames.add ( name );
+    symlinksNamesToPaths.propertyIsEnumerable(name) || ( symlinksNamesToPaths[name] = [] );
+    symlinksNamesToPaths[name].push ( subPath );
     visited.add ( subPath );
 
     if ( !followSymlinks ) return;
@@ -165,7 +182,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
       if ( !dirents.length ) return decrement ();
 
-      const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), files: [], filesNames: new Set (), symlinks: [], symlinksNames: new Set () };
+      const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), directoriesNamesToPaths: {}, files: [], filesNames: new Set (), filesNamesToPaths: {}, symlinks: [], symlinksNames: new Set (), symlinksNamesToPaths: {} };
 
       handleDirents ( dirmap, rootPath, dirents, depth );
 
@@ -192,7 +209,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
         if ( signal.aborted ) return decrement ();
 
         const name = path.basename ( realPath );
-        const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), files: [], filesNames: new Set (), symlinks: [], symlinksNames: new Set () };
+        const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), directoriesNamesToPaths: {}, files: [], filesNames: new Set (), filesNamesToPaths: {}, symlinks: [], symlinksNames: new Set (), symlinksNamesToPaths: {} };
 
         handleStat ( dirmap, realPath, name, stat, depth );
 

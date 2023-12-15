@@ -16,10 +16,13 @@ type Options = {
 type ResultDirectory = {
   directories: string[],
   directoriesNames: Set<string>,
+  directoriesNamesToPaths: Record<string, string[]>,
   files: string[],
   filesNames: Set<string>,
+  filesNamesToPaths: Record<string, string[]>,
   symlinks: string[],
-  symlinksNames: Set<string>
+  symlinksNames: Set<string>,
+  symlinksNamesToPaths: Record<string, string[]>
 };
 
 type ResultDirectories = {
