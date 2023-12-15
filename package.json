@@ -2,7 +2,7 @@
   "name": "tiny-readdir",
   "repository": "github:fabiospampinato/tiny-readdir",
   "description": "A simple promisified recursive readdir function.",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "type": "module",
   "main": "dist/index.js",
   "exports": "./dist/index.js",
