@@ -3,6 +3,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import {NOOP_PROMISE_LIKE} from './constants';
 import {isFunction, makeCounterPromise} from './utils';
 import type {Options, ResultDirectory, ResultDirectories, Result} from './types';
 
@@ -18,6 +19,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const ignore = options?.ignore ?? (() => false);
   const isIgnored = isFunction ( ignore ) ? ignore : ( targetPath: string ) => ignore.test ( targetPath );
   const signal = options?.signal ?? { aborted: false };
+  const onDirents = options?.onDirents || (() => {});
   const directories: string[] = [];
   const directoriesNames: Set<string> = new Set ();
   const directoriesNamesToPaths: Record<string, string[]> = {};
@@ -182,11 +184,17 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
       if ( !dirents.length ) return decrement ();
 
-      const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), directoriesNamesToPaths: {}, files: [], filesNames: new Set (), filesNamesToPaths: {}, symlinks: [], symlinksNames: new Set (), symlinksNamesToPaths: {} };
+      const promise = onDirents ( dirents ) || NOOP_PROMISE_LIKE;
 
-      handleDirents ( dirmap, rootPath, dirents, depth );
+      promise.then ( () => {
 
-      decrement ();
+        const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), directoriesNamesToPaths: {}, files: [], filesNames: new Set (), filesNamesToPaths: {}, symlinks: [], symlinksNames: new Set (), symlinksNamesToPaths: {} };
+
+        handleDirents ( dirmap, rootPath, dirents, depth );
+
+        decrement ();
+
+      });
 
     });
 

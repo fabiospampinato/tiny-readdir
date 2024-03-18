@@ -3,14 +3,29 @@
 
 type Callback = () => void;
 
+type PromiseMaybe<T> = Promise<T> | T;
+
 /* MAIN */
+
+type Dirent = {
+  isFile: () => boolean,
+  isDirectory: () => boolean,
+  isBlockDevice: () => boolean,
+  isCharacterDevice: () => boolean,
+  isSymbolicLink: () => boolean,
+  isFIFO: () => boolean,
+  isSocket: () => boolean,
+  name: string,
+  path: string
+};
 
 type Options = {
   depth?: number,
   limit?: number,
   followSymlinks?: boolean,
   ignore?: (( targetPath: string ) => boolean) | RegExp,
-  signal?: { aborted: boolean }
+  signal?: { aborted: boolean },
+  onDirents?: ( dirents: Dirent[] ) => PromiseMaybe<undefined>
 };
 
 type ResultDirectory = {
@@ -35,4 +50,4 @@ type Result = ResultDirectory & {
 
 /* EXPORT */
 
-export type {Callback, Options, ResultDirectory, ResultDirectories, Result};
+export type {Callback, PromiseMaybe, Dirent, Options, ResultDirectory, ResultDirectories, Result};
