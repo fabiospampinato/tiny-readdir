@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {NOOP_PROMISE_LIKE} from './constants';
 import {isFunction, makeCounterPromise} from './utils';
-import type {Options, ResultDirectory, ResultDirectories, Result} from './types';
+import type {Dirent, Options, ResultDirectory, ResultDirectories, Result} from './types';
 
 /* MAIN */
 
@@ -252,3 +252,4 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 /* EXPORT */
 
 export default readdir;
+export type {Dirent, Options, Result};
