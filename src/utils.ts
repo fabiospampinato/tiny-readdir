@@ -6,6 +6,12 @@ import type {Callback} from './types';
 
 /* MAIN */
 
+const castArray = <T> ( value: T[] | T ): T[] => {
+
+  return Array.isArray ( value ) ? value : [value];
+
+};
+
 const isFunction = ( value: unknown ): value is Function => {
 
   return ( typeof value === 'function' );
@@ -40,4 +46,4 @@ const makeCounterPromise = (): { promise: Promise<void>, increment: Callback, de
 
 /* EXPORT */
 
-export {isFunction, makeCounterPromise};
+export {castArray, isFunction, makeCounterPromise};

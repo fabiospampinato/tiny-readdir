@@ -3,6 +3,8 @@
 
 type Callback = () => void;
 
+type ArrayMaybe<T> = T[] | T;
+
 type PromiseMaybe<T> = Promise<T> | T;
 
 /* MAIN */
@@ -23,7 +25,7 @@ type Options = {
   depth?: number,
   limit?: number,
   followSymlinks?: boolean,
-  ignore?: (( targetPath: string ) => boolean) | RegExp,
+  ignore?: ArrayMaybe<(( targetPath: string ) => boolean) | RegExp>,
   signal?: { aborted: boolean },
   onDirents?: ( dirents: Dirent[] ) => PromiseMaybe<undefined>
 };

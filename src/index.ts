@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {NOOP_PROMISE_LIKE} from './constants';
-import {isFunction, makeCounterPromise} from './utils';
+import {castArray, isFunction, makeCounterPromise} from './utils';
 import type {Dirent, Options, ResultDirectory, ResultDirectories, Result} from './types';
 
 /* MAIN */
@@ -16,8 +16,9 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const followSymlinks = options?.followSymlinks ?? false;
   const maxDepth = options?.depth ?? Infinity;
   const maxPaths = options?.limit ?? Infinity;
-  const ignore = options?.ignore ?? (() => false);
-  const isIgnored = isFunction ( ignore ) ? ignore : ( targetPath: string ) => ignore.test ( targetPath );
+  const ignore = options?.ignore ?? [];
+  const ignores = castArray ( ignore ).map ( ignore => isFunction ( ignore ) ? ignore : ( targetPath: string ) => ignore.test ( targetPath ) );
+  const isIgnored = ( targetPath: string ) => ignores.some ( ignore => ignore ( targetPath ) );
   const signal = options?.signal ?? { aborted: false };
   const onDirents = options?.onDirents || (() => {});
   const directories: string[] = [];
