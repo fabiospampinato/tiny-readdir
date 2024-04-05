@@ -253,4 +253,4 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 /* EXPORT */
 
 export default readdir;
-export type {Dirent, Options, Result, ResultDirectories};
+export type {Dirent, Options, ResultDirectory, ResultDirectories, Result};
