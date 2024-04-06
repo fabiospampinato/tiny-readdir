@@ -149,6 +149,20 @@ describe ( 'Tiny Readdir', it => {
 
   });
 
+  it ( 'supports a depth option', async t => {
+
+    const cwdPath = process.cwd ();
+
+    const {files: files0} = await readdir ( cwdPath, { depth: 0 } );
+    const {files: files1} = await readdir ( cwdPath, { depth: 1 } );
+    const {files: filesInfinity} = await readdir ( cwdPath, { depth: Infinity } );
+
+    t.true ( files0.length === 0 );
+    t.true ( files1.length > 0 && files1.length < 10 );
+    t.true ( filesInfinity.length > 100 );
+
+  });
+
   it ( 'supports a limit option', async t => {
 
     const cwdPath = process.cwd ();

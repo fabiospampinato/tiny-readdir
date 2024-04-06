@@ -40,6 +40,16 @@ const makeCounterPromise = (): { promise: Promise<void>, increment: Callback, de
 
   };
 
+  const init = (): void => { // Accounting for no increment/decrement calls
+
+    increment ();
+
+    queueMicrotask ( decrement );
+
+  };
+
+  init ();
+
   return { promise, increment, decrement };
 
 };
