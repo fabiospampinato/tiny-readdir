@@ -10,7 +10,7 @@ import type {Dirent, Options, ResultDirectory, ResultDirectories, Result} from '
 
 /* MAIN */
 
-//TODO: Streamline the type of dirnmaps
+//TODO: Streamline the type of dirmaps
 
 const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
@@ -202,7 +202,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const populateResultFromSymlink = async ( rootPath: string, depth: number ): Promise<void> => {
+  const populateResultFromSymlink = ( rootPath: string, depth: number ): void => {
 
     increment ();
 
@@ -212,7 +212,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
       if ( signal.aborted ) return decrement ();
 
-      fs.stat ( realPath, async ( error, stat ) => {
+      fs.stat ( realPath, ( error, stat ) => {
 
         if ( error ) return decrement ();
 
