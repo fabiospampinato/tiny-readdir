@@ -23,7 +23,7 @@
     "tiny"
   ],
   "dependencies": {
-    "promise-make-naked": "^2.1.1"
+    "promise-make-counter": "^1.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.4.8",

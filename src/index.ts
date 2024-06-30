@@ -3,8 +3,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import makeCounterPromise from 'promise-make-counter';
 import {NOOP_PROMISE_LIKE} from './constants';
-import {castArray, isFunction, makeCounterPromise} from './utils';
+import {castArray, isFunction} from './utils';
 import type {Dirent, Options, ResultDirectory, ResultDirectories, Result} from './types';
 
 /* MAIN */
