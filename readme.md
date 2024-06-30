@@ -24,19 +24,19 @@ const result = await readdir ( '/foo/bar', {
   onDirents: dirents => console.log ( dirents ) // Optional callback that will be called as soon as new dirents are available, useful for example for discovering ".gitignore" files while searching
 });
 
-console.log ( result.directories ); // => Array of absolute paths pointing to directories
-console.log ( result.files ); // => Array of absolute paths pointing to files
-console.log ( result.symlinks ); // => Array of absolute paths pointing to symlinks
+result.directories; // => Array of absolute paths pointing to directories
+result.files; // => Array of absolute paths pointing to files
+result.symlinks; // => Array of absolute paths pointing to symlinks
 
-console.log ( result.directoriesNames ); // => Set of directories names found
-console.log ( result.filesNames ); // => Set of files name found
-console.log ( result.symlinksNames ); // => Set of symlinks names found
+result.directoriesNames; // => Set of directories names found
+result.filesNames; // => Set of files name found
+result.symlinksNames; // => Set of symlinks names found
 
-console.log ( result.directoriesNamesToPaths ); // => Record of directories names found to their paths
-console.log ( result.filesNamesToPaths ); // => Record of files names found to their paths
-console.log ( result.symlinksNamesToPaths ); // => Record of symlinks names found to their paths
+result.directoriesNamesToPaths; // => Record of directories names found to their paths
+result.filesNamesToPaths; // => Record of files names found to their paths
+result.symlinksNamesToPaths; // => Record of symlinks names found to their paths
 
-setTimeout ( () => aborter.abort (), 10000 ); // Aborting if it's going to take longer than 10s
+setTimeout ( () => aborter.abort (), 10_000 ); // Aborting if it's going to take longer than 10s
 ```
 
 ## License
