@@ -3,7 +3,7 @@
   "repository": "github:fabiospampinato/tiny-readdir",
   "description": "A simple promisified recursive readdir function.",
   "license": "MIT",
-  "version": "2.7.3",
+  "version": "2.7.4",
   "type": "module",
   "main": "dist/index.js",
   "exports": "./dist/index.js",
