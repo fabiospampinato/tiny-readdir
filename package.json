@@ -2,6 +2,7 @@
   "name": "tiny-readdir",
   "repository": "github:fabiospampinato/tiny-readdir",
   "description": "A simple promisified recursive readdir function.",
+  "license": "MIT",
   "version": "2.7.3",
   "type": "module",
   "main": "dist/index.js",
@@ -23,12 +24,12 @@
     "tiny"
   ],
   "dependencies": {
-    "promise-make-counter": "^1.0.1"
+    "promise-make-counter": "^1.0.2"
   },
   "devDependencies": {
-    "@types/node": "^18.19.39",
+    "@types/node": "^18.19.70",
     "fava": "^0.3.4",
     "tsex": "^4.0.2",
-    "typescript": "^5.5.2"
+    "typescript": "^5.7.3"
   }
 }
