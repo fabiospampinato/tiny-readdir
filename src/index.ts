@@ -231,7 +231,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const getResult = async ( rootPath: string, depth: number = 1 ): Promise<Result> => {
+  const populateResultFromRoot = async ( rootPath: string, depth: number = 1 ): Promise<Result> => {
 
     rootPath = path.normalize ( rootPath );
 
@@ -247,7 +247,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  return getResult ( rootPath );
+  return populateResultFromRoot ( rootPath );
 
 };
 
