@@ -1,10 +1,18 @@
 
 /* IMPORT */
 
-import {describe} from 'fava';
+import {describe, t} from 'fava';
 import fs from 'node:fs';
 import path from 'node:path';
 import readdir from '../dist/index.js';
+
+/* HELPERS */
+
+const deepEqualResults = ( result, expected ) => {
+  t.deepEqual ( result.directories.sort (), expected.directories.sort () );
+  t.deepEqual ( result.files.sort (), expected.files.sort () );
+  t.deepEqual ( result.symlinks.sort (), expected.symlinks.sort () );
+};
 
 /* MAIN */
 
@@ -49,9 +57,7 @@ describe ( 'Tiny Readdir', it => {
 
       const result = await readdir ( root1Path, { followSymlinks: true } );
 
-      t.deepEqual ( result.directories.sort (), expected.directories.sort () );
-      t.deepEqual ( result.files.sort (), expected.files.sort () );
-      t.deepEqual ( result.symlinks.sort (), expected.symlinks.sort () );
+      deepEqualResults ( result, expected );
 
     } finally {
 
@@ -115,9 +121,7 @@ describe ( 'Tiny Readdir', it => {
 
       const result = await readdir ( root1Path, { limit: 3, followSymlinks: true } );
 
-      t.deepEqual ( result.directories.sort (), expected.directories.sort () );
-      t.deepEqual ( result.files.sort (), expected.files.sort () );
-      t.deepEqual ( result.symlinks.sort (), expected.symlinks.sort () );
+      deepEqualResults ( result, expected );
 
     } finally {
 
