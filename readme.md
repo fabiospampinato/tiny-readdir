@@ -25,7 +25,7 @@ const result = await readdir ( '/foo/bar', {
   onDirents: dirents => console.log ( dirents ) // Optional callback that will be called as soon as new dirents are available, useful for example for discovering ".gitignore" files while searching
 });
 
-// This is how we would abort the reactive read after 10s
+// This is how we would abort the recursive read after 10s
 
 setTimeout ( () => aborter.abort (), 10_000 ); // Aborting if it's going to take longer than 10s
 
