@@ -132,6 +132,42 @@ describe ( 'Tiny Readdir', it => {
 
   });
 
+  it ( 'supports ignoring via path and context', async t => {
+
+    const cwdPath = process.cwd ();
+    const root1Path = path.join ( cwdPath, 'test', 'root1' );
+    const folder1Path = path.join ( root1Path, 'folder1' );
+    const file1Path = path.join ( folder1Path, 'file1.txt' );
+
+    fs.mkdirSync ( root1Path );
+    fs.mkdirSync ( folder1Path );
+    fs.writeFileSync ( file1Path, '' );
+
+    try {
+
+      await readdir ( root1Path, {
+        ignore: ( targetPath, targetContext ) => {
+          if ( targetPath == folder1Path ) {
+            t.true ( targetContext.isDirectory () );
+            t.false ( targetContext.isFile () );
+          } else if ( targetPath == file1Path ) {
+            t.false ( targetContext.isDirectory () );
+            t.true ( targetContext.isFile () );
+          } else {
+            t.fail ();
+          }
+          return false;
+        }
+      });
+
+    } finally {
+
+      fs.rmSync ( root1Path, { recursive: true } );
+
+    }
+
+  });
+
   it ( 'does not freeze the main thread', async t => {
 
     return new Promise ( resolve => {

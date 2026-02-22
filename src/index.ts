@@ -6,7 +6,7 @@ import path from 'node:path';
 import makeCounterPromise from 'promise-make-counter';
 import {NOOP_PROMISE_LIKE} from './constants';
 import {castArray, isFunction} from './utils';
-import type {Dirent, Options, Result} from './types';
+import type {Dirent, DirentLike, Options, Result} from './types';
 
 /* MAIN */
 
@@ -17,7 +17,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const maxPaths = options?.limit ?? Infinity;
   const ignore = options?.ignore ?? [];
   const ignores = castArray ( ignore ).map ( ignore => isFunction ( ignore ) ? ignore : ( targetPath: string ) => ignore.test ( targetPath ) );
-  const isIgnored = ( targetPath: string ) => ignores.some ( ignore => ignore ( targetPath ) );
+  const isIgnored = ( targetPath: string, targetContext: DirentLike ) => ignores.some ( ignore => ignore ( targetPath, targetContext ) );
   const signal = options?.signal ?? { aborted: false };
   const onDirents = options?.onDirents || (() => {});
   const directories: string[] = [];
@@ -87,7 +87,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( signal.aborted ) return;
 
-    if ( isIgnored ( rootPath ) ) return;
+    if ( isIgnored ( rootPath, stat ) ) return;
 
     if ( stat.isDirectory () ) {
 
@@ -112,7 +112,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
     const name = dirent.name;
     const subPath = `${rootPath}${separator}${name}`;
 
-    if ( isIgnored ( subPath ) ) return;
+    if ( isIgnored ( subPath, dirent ) ) return;
 
     if ( dirent.isDirectory () ) {
 
