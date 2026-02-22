@@ -29,21 +29,11 @@ const result = await readdir ( '/foo/bar', {
 
 setTimeout ( () => aborter.abort (), 10_000 ); // Aborting if it's going to take longer than 10s
 
-// This is the basic information we'll get
+// This is the result object will look like
 
 result.directories; // => Array of absolute paths pointing to directories
 result.files; // => Array of absolute paths pointing to files
 result.symlinks; // => Array of absolute paths pointing to symlinks
-
-// This is more advanced information we'll get, which is useful in some cases
-
-result.directoriesNames; // => Set of directories names found
-result.filesNames; // => Set of files name found
-result.symlinksNames; // => Set of symlinks names found
-
-result.directoriesNamesToPaths; // => Record of directories names found to their paths
-result.filesNamesToPaths; // => Record of files names found to their paths
-result.symlinksNamesToPaths; // => Record of symlinks names found to their paths
 ```
 
 ## License

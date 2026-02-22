@@ -6,11 +6,9 @@ import path from 'node:path';
 import makeCounterPromise from 'promise-make-counter';
 import {NOOP_PROMISE_LIKE} from './constants';
 import {castArray, isFunction} from './utils';
-import type {Dirent, Options, ResultDirectory, ResultDirectories, Result} from './types';
+import type {Dirent, Options, Result} from './types';
 
 /* MAIN */
-
-//TODO: Streamline the type of dirmaps
 
 const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
@@ -23,37 +21,24 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const signal = options?.signal ?? { aborted: false };
   const onDirents = options?.onDirents || (() => {});
   const directories: string[] = [];
-  const directoriesNames: Set<string> = new Set ();
-  const directoriesNamesToPaths: Record<string, string[]> = {};
   const files: string[] = [];
-  const filesNames: Set<string> = new Set ();
-  const filesNamesToPaths: Record<string, string[]> = {};
   const symlinks: string[] = [];
-  const symlinksNames: Set<string> = new Set ();
-  const symlinksNamesToPaths: Record<string, string[]> = {};
-  const map: ResultDirectories = {};
   const visited = new Set<string> ();
-  const resultEmpty: Result = { directories: [], directoriesNames: new Set (), directoriesNamesToPaths: {}, files: [], filesNames: new Set (), filesNamesToPaths: {}, symlinks: [], symlinksNames: new Set (), symlinksNamesToPaths: {}, map: {} };
-  const result: Result = { directories, directoriesNames, directoriesNamesToPaths, files, filesNames, filesNamesToPaths, symlinks, symlinksNames, symlinksNamesToPaths, map };
+  const resultEmpty: Result = { directories: [], files: [], symlinks: [] };
+  const result: Result = { directories, files, symlinks };
   const {promise, increment, decrement} = makeCounterPromise ();
 
   let foundPaths = 0;
 
-  const handleDirectory = ( dirmap: ResultDirectory, subPath: string, name: string, depth: number ): void => {
+  const handleDirectory = ( subPath: string, depth: number ): void => {
 
     if ( visited.has ( subPath ) ) return;
 
     if ( foundPaths >= maxPaths ) return;
 
     foundPaths += 1;
-    dirmap.directories.push ( subPath );
-    dirmap.directoriesNames.add ( name );
-    // dirmap.directoriesNamesToPaths.propertyIsEnumerable(name) || ( dirmap.directoriesNamesToPaths[name] = [] );
-    // dirmap.directoriesNamesToPaths[name].push ( subPath );
+
     directories.push ( subPath );
-    directoriesNames.add ( name );
-    directoriesNamesToPaths.propertyIsEnumerable(name) || ( directoriesNamesToPaths[name] = [] );
-    directoriesNamesToPaths[name].push ( subPath );
     visited.add ( subPath );
 
     if ( depth >= maxDepth ) return;
@@ -64,40 +49,28 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const handleFile = ( dirmap: ResultDirectory, subPath: string, name: string ): void => {
+  const handleFile = ( subPath: string ): void => {
 
     if ( visited.has ( subPath ) ) return;
 
     if ( foundPaths >= maxPaths ) return;
 
     foundPaths += 1;
-    dirmap.files.push ( subPath );
-    dirmap.filesNames.add ( name );
-    // dirmap.filesNamesToPaths.propertyIsEnumerable(name) ||  ( dirmap.filesNamesToPaths[name] = [] );
-    // dirmap.filesNamesToPaths[name].push ( subPath );
+
     files.push ( subPath );
-    filesNames.add ( name );
-    filesNamesToPaths.propertyIsEnumerable(name) || ( filesNamesToPaths[name] = [] );
-    filesNamesToPaths[name].push ( subPath );
     visited.add ( subPath );
 
   };
 
-  const handleSymlink = ( dirmap: ResultDirectory, subPath: string, name: string, depth: number ): void => {
+  const handleSymlink = ( subPath: string, depth: number ): void => {
 
     if ( visited.has ( subPath ) ) return;
 
     if ( foundPaths >= maxPaths ) return;
 
     foundPaths += 1;
-    dirmap.symlinks.push ( subPath );
-    dirmap.symlinksNames.add ( name );
-    // dirmap.symlinksNamesToPaths.propertyIsEnumerable(name) || ( dirmap.symlinksNamesToPaths[name] = [] );
-    // dirmap.symlinksNamesToPaths[name].push ( subPath );
+
     symlinks.push ( subPath );
-    symlinksNames.add ( name );
-    symlinksNamesToPaths.propertyIsEnumerable(name) || ( symlinksNamesToPaths[name] = [] );
-    symlinksNamesToPaths[name].push ( subPath );
     visited.add ( subPath );
 
     if ( !followSymlinks ) return;
@@ -110,7 +83,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   };
 
-  const handleStat = ( dirmap: ResultDirectory, rootPath: string, name: string, stat: fs.Stats, depth: number ): void => {
+  const handleStat = ( rootPath: string, stat: fs.Stats, depth: number ): void => {
 
     if ( signal.aborted ) return;
 
@@ -118,21 +91,20 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( stat.isDirectory () ) {
 
-      handleDirectory ( dirmap, rootPath, name, depth );
+      handleDirectory ( rootPath, depth );
 
     } else if ( stat.isFile () ) {
 
-      handleFile ( dirmap, rootPath, name );
+      handleFile ( rootPath );
 
     } else if ( stat.isSymbolicLink () ) {
 
-      handleSymlink ( dirmap, rootPath, name, depth );
-
+      handleSymlink ( rootPath, depth );
     }
 
   };
 
-  const handleDirent = ( dirmap: ResultDirectory, rootPath: string, dirent: fs.Dirent, depth: number ): void => {
+  const handleDirent = ( rootPath: string, dirent: fs.Dirent, depth: number ): void => {
 
     if ( signal.aborted ) return;
 
@@ -144,25 +116,25 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
     if ( dirent.isDirectory () ) {
 
-      handleDirectory ( dirmap, subPath, name, depth );
+      handleDirectory ( subPath, depth );
 
     } else if ( dirent.isFile () ) {
 
-      handleFile ( dirmap, subPath, name );
+      handleFile ( subPath );
 
     } else if ( dirent.isSymbolicLink () ) {
 
-      handleSymlink ( dirmap, subPath, name, depth );
+      handleSymlink ( subPath, depth );
 
     }
 
   };
 
-  const handleDirents = ( dirmap: ResultDirectory, rootPath: string, dirents: fs.Dirent[], depth: number ): void => {
+  const handleDirents = ( rootPath: string, dirents: fs.Dirent[], depth: number ): void => {
 
     for ( let i = 0, l = dirents.length; i < l; i++ ) {
 
-      handleDirent ( dirmap, rootPath, dirents[i], depth );
+      handleDirent ( rootPath, dirents[i], depth );
 
     }
 
@@ -190,9 +162,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
       promise.then ( () => {
 
-        const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), directoriesNamesToPaths: {}, files: [], filesNames: new Set (), filesNamesToPaths: {}, symlinks: [], symlinksNames: new Set (), symlinksNamesToPaths: {} };
-
-        handleDirents ( dirmap, rootPath, dirents, depth );
+        handleDirents ( rootPath, dirents, depth );
 
         decrement ();
 
@@ -218,10 +188,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
         if ( signal.aborted ) return decrement ();
 
-        const name = path.basename ( realPath );
-        const dirmap = map[rootPath] = { directories: [], directoriesNames: new Set (), directoriesNamesToPaths: {}, files: [], filesNames: new Set (), filesNamesToPaths: {}, symlinks: [], symlinksNames: new Set (), symlinksNamesToPaths: {} };
-
-        handleStat ( dirmap, realPath, name, stat, depth );
+        handleStat ( realPath, stat, depth );
 
         decrement ();
 
@@ -254,4 +221,4 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 /* EXPORT */
 
 export default readdir;
-export type {Dirent, Options, ResultDirectory, ResultDirectories, Result};
+export type {Dirent, Options, Result};

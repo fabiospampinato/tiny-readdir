@@ -30,26 +30,12 @@ type Options = {
   onDirents?: ( dirents: Dirent[] ) => PromiseMaybe<undefined>
 };
 
-type ResultDirectory = {
+type Result = {
   directories: string[],
-  directoriesNames: Set<string>,
-  directoriesNamesToPaths: Record<string, string[]>,
   files: string[],
-  filesNames: Set<string>,
-  filesNamesToPaths: Record<string, string[]>,
-  symlinks: string[],
-  symlinksNames: Set<string>,
-  symlinksNamesToPaths: Record<string, string[]>
-};
-
-type ResultDirectories = {
-  [path: string]: ResultDirectory
-};
-
-type Result = ResultDirectory & {
-  map: ResultDirectories
+  symlinks: string[]
 };
 
 /* EXPORT */
 
-export type {Callback, PromiseMaybe, Dirent, Options, ResultDirectory, ResultDirectories, Result};
+export type {Callback, PromiseMaybe, Dirent, Options, Result};
