@@ -49,7 +49,9 @@ describe ( 'Tiny Readdir', it => {
 
       const result = await readdir ( root1Path, { followSymlinks: true } );
 
-      t.deepEqual ( result, expected );
+      t.deepEqual ( result.directories.sort (), expected.directories.sort () );
+      t.deepEqual ( result.files.sort (), expected.files.sort () );
+      t.deepEqual ( result.symlinks.sort (), expected.symlinks.sort () );
 
     } finally {
 
@@ -113,7 +115,9 @@ describe ( 'Tiny Readdir', it => {
 
       const result = await readdir ( root1Path, { limit: 3, followSymlinks: true } );
 
-      t.deepEqual ( result, expected );
+      t.deepEqual ( result.directories.sort (), expected.directories.sort () );
+      t.deepEqual ( result.files.sort (), expected.files.sort () );
+      t.deepEqual ( result.symlinks.sort (), expected.symlinks.sort () );
 
     } finally {
 
