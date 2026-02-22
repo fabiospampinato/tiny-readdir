@@ -29,7 +29,7 @@ const result = await readdir ( '/foo/bar', {
 
 setTimeout ( () => aborter.abort (), 10_000 ); // Aborting if it's going to take longer than 10s
 
-// This is the result object will look like
+// This is what the result object will look like
 
 result.directories; // => Array of absolute paths pointing to directories
 result.files; // => Array of absolute paths pointing to files
