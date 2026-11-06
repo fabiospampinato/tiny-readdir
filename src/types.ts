@@ -30,7 +30,7 @@ type Options = {
   followSymlinks?: boolean,
   ignore?: ArrayMaybe<(( targetPath: string, targetContext: DirentLike ) => boolean) | RegExp>,
   signal?: { aborted: boolean },
-  onDirents?: ( dirents: Dirent[] ) => PromiseMaybe<undefined>
+  onDirents?: ( dirents: Dirent[], rootPath: string ) => PromiseMaybe<undefined>
 };
 
 type Result = {
