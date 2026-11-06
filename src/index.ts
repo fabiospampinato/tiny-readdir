@@ -158,7 +158,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
       if ( !dirents.length ) return decrement ();
 
-      const promise = onDirents ( dirents ) || NOOP_PROMISE_LIKE;
+      const promise = onDirents ( dirents, rootPath ) || NOOP_PROMISE_LIKE;
 
       promise.then ( () => {
 

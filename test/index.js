@@ -168,6 +168,40 @@ describe ( 'Tiny Readdir', it => {
 
   });
 
+  it ( 'supports an onDirents option', async t => {
+
+    const cwdPath = process.cwd ();
+    const root1Path = path.join ( cwdPath, 'test', 'root1' );
+    const folder1Path = path.join ( root1Path, 'folder1' );
+    const file1Path = path.join ( folder1Path, 'file1.txt' );
+
+    fs.mkdirSync ( root1Path );
+    fs.mkdirSync ( folder1Path );
+    fs.writeFileSync ( file1Path, '' );
+
+    const calls = [];
+
+    try {
+
+      await readdir ( root1Path, {
+        onDirents: ( dirents, rootPath ) => {
+          calls.push ([ rootPath, dirents.map ( dirent => dirent.name ) ]);
+        }
+      });
+
+      t.deepEqual ( calls.sort (), [
+        [root1Path, ['folder1']],
+        [folder1Path, ['file1.txt']]
+      ]);
+
+    } finally {
+
+      fs.rmSync ( root1Path, { recursive: true } );
+
+    }
+
+  });
+
   it ( 'does not freeze the main thread', async t => {
 
     return new Promise ( resolve => {
