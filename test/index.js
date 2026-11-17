@@ -168,6 +168,88 @@ describe ( 'Tiny Readdir', it => {
 
   });
 
+  it ( 'supports an onDirents option', async t => {
+
+    const cwdPath = process.cwd ();
+    const root1Path = path.join ( cwdPath, 'test', 'root1' );
+    const root2Path = path.join ( cwdPath, 'test', 'root2' );
+    const folder1Path = path.join ( root1Path, 'folder1' );
+    const folder2Path = path.join ( root1Path, 'folder2' );
+    const folder1DeepPath = path.join ( folder1Path, 'deep' );
+    const file1aPath = path.join ( folder1Path, 'file1a.txt' );
+    const file1bPath = path.join ( folder1Path, 'file1b.txt' );
+    const file2Path = path.join ( folder2Path, 'file2.txt' );
+    const fileDeep1Path = path.join ( folder1DeepPath, 'file1.txt' );
+    const symlink1FromPath = path.join ( root1Path, 'symlink' );
+    const symlink1ToPath = root2Path;
+    const symlink2FromPath = path.join ( root2Path, 'symlink' );
+    const symlink2ToPath = root1Path;
+
+    fs.mkdirSync ( root1Path );
+    fs.mkdirSync ( root2Path );
+    fs.mkdirSync ( folder1Path );
+    fs.mkdirSync ( folder2Path );
+    fs.mkdirSync ( folder1DeepPath );
+    fs.writeFileSync ( file1aPath, '' );
+    fs.writeFileSync ( file1bPath, '' );
+    fs.writeFileSync ( file2Path, '' );
+    fs.writeFileSync ( fileDeep1Path, '' );
+    fs.symlinkSync ( symlink1ToPath, symlink1FromPath );
+    fs.symlinkSync ( symlink2ToPath, symlink2FromPath );
+
+    const expected = {
+      directories: [folder1Path, folder2Path, folder1DeepPath],
+      files: [file1aPath, file1bPath, file2Path, fileDeep1Path],
+      symlinks: [symlink1FromPath]
+    };
+
+    try {
+
+      const seen = {
+        directories: [],
+        files: [],
+        symlinks: []
+      };
+
+      const result = await readdir ( root1Path, {
+        onDirents: dirents => {
+          t.true ( Array.isArray ( dirents ) );
+          t.true ( dirents.length > 0 );
+          for ( const dirent of dirents ) {
+            t.is ( typeof dirent.name, 'string' );
+            t.true ( dirent.name.length > 0 );
+            t.is ( typeof dirent.path, 'string' );
+            t.true ( path.isAbsolute ( dirent.path ) );
+            for ( const method of ['isFile', 'isDirectory', 'isBlockDevice', 'isCharacterDevice', 'isSymbolicLink', 'isFIFO', 'isSocket'] ) {
+              t.is ( typeof dirent[method], 'function' );
+              t.is ( typeof dirent[method](), 'boolean' );
+            }
+            const direntPath = path.join ( dirent.path, dirent.name );
+            if ( dirent.isDirectory () ) {
+              seen.directories.push ( direntPath );
+            } else if ( dirent.isFile () ) {
+              seen.files.push ( direntPath );
+            } else if ( dirent.isSymbolicLink () ) {
+              seen.symlinks.push ( direntPath );
+            } else {
+              t.fail ();
+            }
+          }
+        }
+      });
+
+      deepEqualResults ( seen, expected );
+      deepEqualResults ( result, expected );
+
+    } finally {
+
+      fs.rmSync ( root1Path, { recursive: true } );
+      fs.rmSync ( root2Path, { recursive: true } );
+
+    }
+
+  });
+
   it ( 'rejects if onDirents throws or rejects', async t => {
 
     const cwdPath = process.cwd ();
