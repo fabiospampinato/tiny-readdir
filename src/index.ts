@@ -171,6 +171,16 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
       if ( !dirents.length ) return decrement ();
 
+      if ( typeof dirents[0].path !== 'string' ) { // Normalizing, as Node v16 and v26+ don't provide "dirent.path"
+
+        for ( let i = 0, l = dirents.length; i < l; i++ ) {
+
+          dirents[i].path = dirents[i].parentPath ?? rootPath;
+
+        }
+
+      }
+
       let promise: Promise<undefined> | typeof NOOP_PROMISE_LIKE;
 
       try {
