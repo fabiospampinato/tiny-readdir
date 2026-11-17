@@ -29,6 +29,19 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
   const {promise, increment, decrement} = makeCounterPromise ();
 
   let foundPaths = 0;
+  let failed = false;
+  let failure: unknown;
+
+  const handleFailure = ( error: unknown ): void => {
+
+    if ( !failed ) {
+
+      failed = true;
+      failure = error;
+
+    }
+
+  };
 
   const handleDirectory = ( subPath: string, depth: number ): void => {
 
@@ -85,7 +98,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   const handleStat = ( rootPath: string, stat: fs.Stats, depth: number ): void => {
 
-    if ( signal.aborted ) return;
+    if ( signal.aborted || failed ) return;
 
     if ( isIgnored ( rootPath, stat ) ) return;
 
@@ -106,7 +119,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   const handleDirent = ( rootPath: string, dirent: fs.Dirent, depth: number ): void => {
 
-    if ( signal.aborted ) return;
+    if ( signal.aborted || failed ) return;
 
     const separator = ( rootPath === path.sep ) ? '' : path.sep;
     const name = dirent.name;
@@ -142,7 +155,7 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
   const populateResultFromPath = ( rootPath: string, depth: number ): void => {
 
-    if ( signal.aborted ) return;
+    if ( signal.aborted || failed ) return;
 
     if ( depth > maxDepth ) return;
 
@@ -154,15 +167,35 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
       if ( error ) return decrement ();
 
-      if ( signal.aborted ) return decrement ();
+      if ( signal.aborted || failed ) return decrement ();
 
       if ( !dirents.length ) return decrement ();
 
-      const promise = onDirents ( dirents ) || NOOP_PROMISE_LIKE;
+      let promise: Promise<undefined> | typeof NOOP_PROMISE_LIKE;
+
+      try {
+
+        promise = onDirents ( dirents ) || NOOP_PROMISE_LIKE;
+
+      } catch ( error: unknown ) {
+
+        handleFailure ( error );
+
+        decrement ();
+
+        return;
+
+      }
 
       promise.then ( () => {
 
         handleDirents ( rootPath, dirents, depth );
+
+        decrement ();
+
+      }, ( error: unknown ) => {
+
+        handleFailure ( error );
 
         decrement ();
 
@@ -180,13 +213,13 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
 
       if ( error ) return decrement ();
 
-      if ( signal.aborted ) return decrement ();
+      if ( signal.aborted || failed ) return decrement ();
 
       fs.stat ( realPath, ( error, stat ) => {
 
         if ( error ) return decrement ();
 
-        if ( signal.aborted ) return decrement ();
+        if ( signal.aborted || failed ) return decrement ();
 
         handleStat ( realPath, stat, depth );
 
@@ -207,6 +240,8 @@ const readdir = ( rootPath: string, options?: Options ): Promise<Result> => {
     populateResultFromPath ( rootPath, depth );
 
     await promise;
+
+    if ( failed ) throw failure;
 
     if ( signal.aborted ) return resultEmpty;
 

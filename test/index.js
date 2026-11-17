@@ -168,6 +168,53 @@ describe ( 'Tiny Readdir', it => {
 
   });
 
+  it ( 'rejects if onDirents throws or rejects', async t => {
+
+    const cwdPath = process.cwd ();
+    const root1Path = path.join ( cwdPath, 'test', 'root1' );
+    const folder1Path = path.join ( root1Path, 'folder1' );
+    const file1Path = path.join ( folder1Path, 'file1.txt' );
+
+    fs.mkdirSync ( root1Path );
+    fs.mkdirSync ( folder1Path );
+    fs.writeFileSync ( file1Path, '' );
+
+    try {
+
+      const callbacks = {
+        sync: () => { throw new Error ( 'sync' ) },
+        async: async () => { throw new Error ( 'async' ) }
+      };
+
+      for ( const [message, onDirents] of Object.entries ( callbacks ) ) {
+
+        let calls = 0;
+
+        try {
+          await readdir ( root1Path, {
+            onDirents: dirents => {
+              calls += 1;
+              return onDirents ( dirents );
+            }
+          });
+          t.fail ();
+        } catch ( error ) {
+          t.true ( error instanceof Error );
+          t.is ( error.message, message );
+        }
+
+        t.is ( calls, 1 );
+
+      }
+
+    } finally {
+
+      fs.rmSync ( root1Path, { recursive: true } );
+
+    }
+
+  });
+
   it ( 'does not freeze the main thread', async t => {
 
     return new Promise ( resolve => {

@@ -1,8 +1,6 @@
 
 /* HELPERS */
 
-type Callback = () => void;
-
 type ArrayMaybe<T> = T[] | T;
 
 type PromiseMaybe<T> = Promise<T> | T;
@@ -41,4 +39,4 @@ type Result = {
 
 /* EXPORT */
 
-export type {Callback, PromiseMaybe, DirentLike, Dirent, Options, Result};
+export type {PromiseMaybe, DirentLike, Dirent, Options, Result};

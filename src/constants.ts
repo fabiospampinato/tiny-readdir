@@ -1,13 +1,9 @@
 
-/* IMPORT */
-
-import type {Callback} from './types';
-
 /* MAIN */
 
 const NOOP_PROMISE_LIKE = {
-  then: ( fn: Callback ) => {
-    fn ();
+  then: ( onResolve: () => void, _onReject: ( error: unknown ) => void ) => {
+    onResolve ();
   }
 };
 
